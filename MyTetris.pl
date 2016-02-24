@@ -105,11 +105,11 @@ sub start_pause{
 }
 #when a key is pressed, the function bound with it will execute
 sub bind_key{
-	my($key_char, $callback) = @_;
-	if($key_char == ' '){
-		$key_char = "KeyPress-space";
+	my($keychar, $callback) = @_;
+	if($keychar eq ' '){
+		$keychar = "KeyPress-space";
 	}
-	$main_frame->bind("<${key_char}>", $callback);
+	$main_frame->bind("<${keychar}>", $callback);
 }
 
 sub create_tile{
@@ -195,6 +195,36 @@ sub tick {
 	$main_frame->after($tick_tock, \&tick); #restart timer for next drop
 }
 
+sub move_left{
+	my $tile;
+	for $tile(@tiles){
+		#check to the left of the block
+		if((($tile % $MAX_COL) == 0) ||
+					($heap[$tile -1])){
+						return;
+					}
+				}
+
+		foreach $tile (@tiles){
+			$tile--;
+		}
+		$canvas->move('block', -$TILE_DIMENSION, 0);
+}
+sub move_right{
+	my $tile;
+	foreach $tile(@tiles){
+		#check right of the block, to not move out of the canvas or over another blocks
+		if(((($tile+1)%$MAX_COL)==0) ||
+		     ($heap[$tile+1])){
+				  return;
+				}
+			foreach $tile(@tiles){
+				$tile++;
+			}
+	}
+	$canvas->move('block', $TILE_DIMENSION, 0);
+}
+
 sub move_down{
  my $tile;
  my $first_cell_last_row = ($MAX_ROW - 1)*$MAX_COL;
@@ -212,9 +242,9 @@ sub move_down{
 }
 
 sub merge_tiles{
-	my $cell;
-	foreach $cell (@tiles){
-		$heap[$cell] = shift @tile_ids;
+	my $tile;
+	foreach $tile (@tiles){
+		$heap[$tile] = shift @tile_ids;
 	}
 	$canvas->dtag('block'); #there is no block, there is only failure
 	my $last_cell = $MAX_ROW*$MAX_COL;
@@ -222,15 +252,15 @@ sub merge_tiles{
 	my $rows_to_be_deleted;
 	my $i;
 
-	for($cell = 0; $cell < $last_cell;){
+	for($tile = 0; $tile < $last_cell;){
 		$filled_cell_count=0;
-		my $first_cell_in_row = $cell;
+		my $first_cell_in_row = $tile;
 		for($i = 0; $i < $MAX_COL;$i++){
-			$filled_cell_count++ if($heap[$cell++]);
+			$filled_cell_count++ if($heap[$tile++]);
 		}
 		if($filled_cell_count == $MAX_COL){
 			#the row is full. We all know tetris row's are 10 blocks accross, but, this allows for variable size games
-			for($i = $first_cell_in_row; $i< $cell; $i++){
+			for($i = $first_cell_in_row; $i< $tile; $i++){
 				$canvas->addtag('delete', 'withtag'=>$heap[$i]);
 			}
 			splice(@heap, $first_cell_in_row, $MAX_COL);
@@ -248,7 +278,7 @@ sub merge_tiles{
 													my($i);
 													my $last = $MAX_COL * $MAX_ROW;
 													for($i = 0; $i<$last; $i++){
-														next if (!$heap[$i]);
+														next if !$heap[$i];
 														my $col = $i % $MAX_COL;
 														my $row = int($i / $MAX_COL);
 														$canvas->coords(
@@ -260,6 +290,7 @@ sub merge_tiles{
 													}
 											})
 		}
+
 	}
 
 sub create_screen{
@@ -307,8 +338,8 @@ sub init{
 	create_screen();
 	#bind_key('w', \&rotate);
 	#bind_key('s', \&rotate);
-	#bind_key('a', \&move_left);
-	#bind_key('d', \&move_right);
+	bind_key('a', \&move_left);
+	bind_key('d', \&move_right);
 	#bind_key(' ', \&drop);
 	set_state($START);
 	new_game();
