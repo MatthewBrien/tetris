@@ -1,0 +1,7 @@
+A simple tetris implementation in Perl
+Based on the work of #O'reilly & associates inc,
+and Sriram Srinivasan and of course, Alexey Pajitnov
+
+To run, cd into the proper directory and use the command <perl MyTetris.pl>
+
+
